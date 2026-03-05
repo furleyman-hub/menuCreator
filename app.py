@@ -531,6 +531,7 @@ with tab_meals:
         use_container_width=True,
         hide_index=True,
         num_rows="dynamic",
+        column_order=["Favorite ⭐", "Name", "Tags", "Equipment", "Make-Ahead OK", "Leftover Friendly", "Notes"],
         key="meals_editor",
     )
 
