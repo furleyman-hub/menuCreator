@@ -2,13 +2,6 @@ dinner_time: '18:00'
 event_duration_minutes: 60
 random_seed: 42
 people_served: 1 adult + 2 boys (ages 10 and 13) — plan as 3 adults
-restrictions:
-  no_pork: true
-  no_dairy: true
-  no_creamy: true
-  no_breakfast: true
-  no_fried_rice: true
-  oven_avoid: true
 leftover_strategy:
   enabled: false
   weekday: 2
@@ -23,7 +16,7 @@ anchor_rules:
   - soup
 - weekday: 0
   label: Make-ahead meal (auto-selected)
-  description: Cooked Sunday evening, reheated Monday
+  description: Cooked Monday, reheated and served Tuesday
   enabled: true
   fixed_name: false
   require_make_ahead: true

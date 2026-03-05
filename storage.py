@@ -13,7 +13,7 @@ from filelock import FileLock
 from typing import Any, Dict, List
 
 from models import (
-    AnchorRule, Config, LeftoverStrategy, Meal, Restrictions,
+    AnchorRule, Config, LeftoverStrategy, Meal,
     FAST_FOOD_LABEL, MONDAY, SUNDAY, THURSDAY,
 )
 
@@ -70,7 +70,7 @@ def _default_anchor_rules() -> List[AnchorRule]:
         AnchorRule(
             weekday=MONDAY,
             label="Make-ahead meal (auto-selected)",
-            description="Cooked Sunday evening, reheated Monday",
+            description="Cooked Monday, reheated and served Tuesday",
             enabled=True,
             fixed_name=False,          # auto-select from eligible pool
             require_make_ahead=True,
@@ -128,17 +128,6 @@ def load_config() -> Config:
         save_config(cfg)
         return cfg
 
-    # Restrictions
-    r = data.get("restrictions", {})
-    restrictions = Restrictions(
-        no_pork=r.get("no_pork", True),
-        no_dairy=r.get("no_dairy", True),
-        no_creamy=r.get("no_creamy", True),
-        no_breakfast=r.get("no_breakfast", True),
-        no_fried_rice=r.get("no_fried_rice", True),
-        oven_avoid=r.get("oven_avoid", True),
-    )
-
     # Leftover strategy
     ls = data.get("leftover_strategy", {})
     leftover_strategy = LeftoverStrategy(
@@ -169,7 +158,6 @@ def load_config() -> Config:
             "people_served",
             "1 adult + 2 boys (ages 10 and 13) — plan as 3 adults",
         ),
-        restrictions=restrictions,
         leftover_strategy=leftover_strategy,
         anchor_rules=anchor_rules,
         excluded_meals=data.get("excluded_meals", _default_excluded_meals()),
@@ -185,14 +173,6 @@ def save_config(config: Config) -> None:
         "event_duration_minutes": config.event_duration_minutes,
         "random_seed": config.random_seed,
         "people_served": config.people_served,
-        "restrictions": {
-            "no_pork": config.restrictions.no_pork,
-            "no_dairy": config.restrictions.no_dairy,
-            "no_creamy": config.restrictions.no_creamy,
-            "no_breakfast": config.restrictions.no_breakfast,
-            "no_fried_rice": config.restrictions.no_fried_rice,
-            "oven_avoid": config.restrictions.oven_avoid,
-        },
         "leftover_strategy": {
             "enabled": config.leftover_strategy.enabled,
             "weekday": config.leftover_strategy.weekday,

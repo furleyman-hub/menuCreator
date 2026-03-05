@@ -15,7 +15,7 @@ from typing import Dict, List, Optional, Tuple
 from models import (
     AnchorRule, Config, Meal, ScheduleDay,
     FAST_FOOD_LABEL, LEFTOVERS_LABEL,
-    MONDAY, THURSDAY, SUNDAY,
+    MONDAY, TUESDAY, THURSDAY, SUNDAY,
 )
 
 
@@ -52,14 +52,14 @@ def filter_eligible_meals(
         if meal.name in excluded_set:
             continue
 
-        r = config.restrictions
-        if r.no_pork       and meal.contains_pork:  continue
-        if r.no_dairy      and meal.contains_dairy:  continue
-        if r.no_creamy     and meal.creamy:          continue
-        if r.no_breakfast  and meal.breakfast:       continue
-        if r.no_fried_rice and meal.fried_rice:      continue
+        # Restrictions are always enforced (no toggles)
+        if meal.contains_pork:   continue
+        if meal.contains_dairy:  continue
+        if meal.creamy:          continue
+        if meal.breakfast:       continue
+        if meal.fried_rice:      continue
         # oven_avoid: require at least one small-appliance tag
-        if r.oven_avoid and meal.equipment:
+        if meal.equipment:
             small = {"air_fryer", "instant_pot", "slow_cooker",
                      "rice_cooker", "toaster_oven"}
             if not any(eq in small for eq in meal.equipment):
@@ -206,6 +206,8 @@ def generate_schedule(
     schedule: List[ScheduleDay] = []
     warnings: List[str] = []
     used_this_month: set = set()
+    # Maps ISO week number → meal name cooked on Monday (for Tuesday reheat)
+    monday_meal_by_week: Dict[int, str] = {}
 
     # Pre-seed used_this_month from locked days so we won't repeat them
     for ld in locked_days.values():
@@ -219,6 +221,17 @@ def generate_schedule(
         if d in locked_days:
             day = locked_days[d]
             day.locked = True
+            schedule.append(day)
+            continue
+
+        # ── Tuesday: reheat Monday's make-ahead meal ────────────────────────
+        if weekday == TUESDAY and wk in monday_meal_by_week:
+            day = ScheduleDay(
+                date=d,
+                meal_name=monday_meal_by_week[wk],
+                is_reheat=True,
+                notes="Reheated from Monday",
+            )
             schedule.append(day)
             continue
 
@@ -281,6 +294,9 @@ def generate_schedule(
                     warnings.append(msg)
 
                 used_this_month.add(chosen.name)
+                # If this is the Monday make-ahead anchor, record for Tuesday reheat
+                if weekday == MONDAY and anchor.require_make_ahead:
+                    monday_meal_by_week[wk] = chosen.name
                 day = ScheduleDay(
                     date=d,
                     meal_name=chosen.name,
@@ -365,7 +381,7 @@ def validate_schedule(schedule: List[ScheduleDay]) -> List[str]:
     issues: List[str] = []
 
     names = [d.meal_name for d in schedule
-             if not d.is_fast_food and not d.is_leftovers]
+             if not d.is_fast_food and not d.is_leftovers and not d.is_reheat]
     counts: Dict[str, int] = {}
     for n in names:
         counts[n] = counts.get(n, 0) + 1

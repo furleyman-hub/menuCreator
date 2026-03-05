@@ -23,7 +23,7 @@ import ics_export
 import scheduler as sched_mod
 import storage
 from models import (
-    AnchorRule, Config, LeftoverStrategy, Meal, Restrictions, ScheduleDay,
+    AnchorRule, Config, LeftoverStrategy, Meal, ScheduleDay,
     FAST_FOOD_LABEL, LEFTOVERS_LABEL, WEEKDAY_NAMES,
 )
 
@@ -70,6 +70,7 @@ _init()
 
 def _type_label(day: ScheduleDay) -> str:
     if day.is_fast_food:  return "🍕 Fast Food"
+    if day.is_reheat:     return "♨️ Reheat"
     if day.is_anchor:     return "⚓ Anchor"
     if day.is_leftovers:  return "♻️ Leftovers"
     return "🥘 Regular"
@@ -109,6 +110,7 @@ def df_to_locked_days(
                 is_anchor=orig.is_anchor,
                 is_fast_food=orig.is_fast_food,
                 is_leftovers=orig.is_leftovers,
+                is_reheat=orig.is_reheat,
                 notes=row["Notes"],
             )
     return locked
@@ -270,7 +272,7 @@ with tab_plan:
 
         # Legend
         st.markdown(
-            "**Legend:** ⚓ Anchor · 🍕 Fast Food · ♻️ Leftovers · 🥘 Regular · "
+            "**Legend:** ⚓ Anchor · 🍕 Fast Food · ♨️ Reheat · ♻️ Leftovers · 🥘 Regular · "
             "🔒 Lock = keep this meal when regenerating"
         )
 
@@ -336,19 +338,11 @@ with tab_rules:
         people_served = st.text_input("People served", value=cfg.people_served)
 
         st.subheader("Restrictions")
-        st.caption("Toggle each restriction on or off.")
-        col1, col2 = st.columns(2)
-        with col1:
-            no_pork      = st.checkbox("No pork",              value=cfg.restrictions.no_pork)
-            no_dairy     = st.checkbox("No dairy",             value=cfg.restrictions.no_dairy)
-            no_creamy    = st.checkbox("No creamy sauces",     value=cfg.restrictions.no_creamy)
-        with col2:
-            no_breakfast = st.checkbox("No breakfast-for-dinner", value=cfg.restrictions.no_breakfast)
-            no_fried_rice = st.checkbox("No fried rice",       value=cfg.restrictions.no_fried_rice)
-            oven_avoid   = st.checkbox(
-                "Avoid full-size oven (use small appliances)",
-                value=cfg.restrictions.oven_avoid,
-            )
+        st.info(
+            "All dietary restrictions are always enforced: "
+            "no pork · no dairy · no creamy sauces · no breakfast-for-dinner · "
+            "no fried rice · small appliances only (no full-size oven)."
+        )
 
         st.subheader("Favorites")
         favorite_boost = st.number_input(
@@ -446,14 +440,6 @@ with tab_rules:
 
     if saved:
         cfg.people_served = people_served
-        cfg.restrictions = Restrictions(
-            no_pork=no_pork,
-            no_dairy=no_dairy,
-            no_creamy=no_creamy,
-            no_breakfast=no_breakfast,
-            no_fried_rice=no_fried_rice,
-            oven_avoid=oven_avoid,
-        )
         cfg.leftover_strategy = LeftoverStrategy(
             enabled=ls_enabled,
             weekday=int(ls_weekday),

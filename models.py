@@ -33,19 +33,6 @@ class Meal:
 
 
 @dataclass
-class Restrictions:
-    """
-    Dietary and appliance restrictions.  Every flag is independently toggleable.
-    """
-    no_pork: bool = True
-    no_dairy: bool = True
-    no_creamy: bool = True         # no creamy sauces
-    no_breakfast: bool = True      # no breakfast-for-dinner
-    no_fried_rice: bool = True
-    oven_avoid: bool = True        # avoid full-size oven; use small appliances only
-
-
-@dataclass
 class LeftoverStrategy:
     """Configuration for the optional 'leftovers night' weekly slot."""
     enabled: bool = False
@@ -88,7 +75,6 @@ class Config:
     max_soups_per_week: int = 2                 # cap on soup meals per calendar week
     favorite_boost: int = 3                     # how many extra copies favorites get in the pool
 
-    restrictions: Restrictions = field(default_factory=Restrictions)
     leftover_strategy: LeftoverStrategy = field(default_factory=LeftoverStrategy)
     anchor_rules: List[AnchorRule] = field(default_factory=list)
 
@@ -108,6 +94,8 @@ class ScheduleDay:
     is_fast_food: bool = False  # Thursday no-cook placeholder
     is_leftovers: bool = False  # leftovers-night placeholder
 
+    is_reheat: bool = False     # Tuesday carry-over of Monday's make-ahead meal
+
     warning: str = ""   # surfaced in the UI if something is wrong
     notes: str = ""     # meal notes or anchor description
 
@@ -123,6 +111,7 @@ WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 # Python weekday integers for anchor defaults
 MONDAY    = 0
+TUESDAY   = 1
 THURSDAY  = 3
 SUNDAY    = 6
 
