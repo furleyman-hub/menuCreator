@@ -350,6 +350,20 @@ with tab_rules:
                 value=cfg.restrictions.oven_avoid,
             )
 
+        st.subheader("Favorites")
+        favorite_boost = st.number_input(
+            "Favorite meal boost (×)",
+            value=int(cfg.favorite_boost),
+            min_value=1,
+            max_value=10,
+            help=(
+                "Meals marked ⭐ Favorite appear this many times more often "
+                "than regular meals when a day is being filled. "
+                "E.g. 3× means a favorite is 3× as likely to be picked next. "
+                "Favorites still only appear once per month before repeating."
+            ),
+        )
+
         st.subheader("Soup Cap")
         max_soups = st.number_input(
             "Max soups per week (0 = unlimited)",
@@ -444,6 +458,7 @@ with tab_rules:
             enabled=ls_enabled,
             weekday=int(ls_weekday),
         )
+        cfg.favorite_boost     = int(favorite_boost)
         cfg.max_soups_per_week = int(max_soups)
 
         # Rebuild anchor rules from the edited table
@@ -502,13 +517,15 @@ with tab_meals:
             "Creamy":           m.creamy,
             "Breakfast":        m.breakfast,
             "Fried Rice":       m.fried_rice,
+            "Favorite ⭐":      m.favorite,
             "Make-Ahead OK":    m.make_ahead_ok,
             "Leftover Friendly":m.leftover_friendly,
             "Notes":            m.notes,
         })
     meals_df = pd.DataFrame(meal_rows) if meal_rows else pd.DataFrame(
         columns=["Name", "Tags", "Equipment", "Pork", "Dairy", "Creamy",
-                 "Breakfast", "Fried Rice", "Make-Ahead OK", "Leftover Friendly", "Notes"]
+                 "Breakfast", "Fried Rice", "Favorite ⭐", "Make-Ahead OK",
+                 "Leftover Friendly", "Notes"]
     )
 
     edited_meals_df = st.data_editor(
@@ -528,6 +545,10 @@ with tab_meals:
             "Creamy":            st.column_config.CheckboxColumn("Creamy?"),
             "Breakfast":         st.column_config.CheckboxColumn("Breakfast?"),
             "Fried Rice":        st.column_config.CheckboxColumn("Fried Rice?"),
+            "Favorite ⭐":       st.column_config.CheckboxColumn(
+                "Favorite ⭐",
+                help="Checked meals appear more often in generation (see Favorite Boost in Settings).",
+            ),
             "Make-Ahead OK":     st.column_config.CheckboxColumn("Make-Ahead"),
             "Leftover Friendly": st.column_config.CheckboxColumn("Leftovers"),
             "Notes":             st.column_config.TextColumn(width="large"),
@@ -554,6 +575,7 @@ with tab_meals:
                     creamy=bool(row["Creamy"]),
                     breakfast=bool(row["Breakfast"]),
                     fried_rice=bool(row["Fried Rice"]),
+                    favorite=bool(row["Favorite ⭐"]),
                     make_ahead_ok=bool(row["Make-Ahead OK"]),
                     leftover_friendly=bool(row["Leftover Friendly"]),
                     notes=str(row["Notes"]) if row["Notes"] else "",

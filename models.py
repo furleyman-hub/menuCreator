@@ -25,6 +25,7 @@ class Meal:
     fried_rice: bool = False
 
     # Scheduling flags
+    favorite: bool = False           # if True, meal is weighted more heavily in selection
     make_ahead_ok: bool = False      # can be cooked ahead, reheated Monday
     leftover_friendly: bool = False  # works well as next-day leftovers
 
@@ -85,6 +86,7 @@ class Config:
     random_seed: int = 42                       # deterministic generation
     people_served: str = "1 adult + 2 boys (ages 10 and 13) — plan as 3 adults"
     max_soups_per_week: int = 2                 # cap on soup meals per calendar week
+    favorite_boost: int = 3                     # how many extra copies favorites get in the pool
 
     restrictions: Restrictions = field(default_factory=Restrictions)
     leftover_strategy: LeftoverStrategy = field(default_factory=LeftoverStrategy)

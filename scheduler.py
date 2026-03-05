@@ -77,6 +77,23 @@ def filter_eligible_meals(
     return eligible
 
 
+def _apply_boost(pool: List[Meal], boost: int) -> List[Meal]:
+    """
+    Return a new list where every favorite meal appears *boost* times and
+    every non-favorite appears once.  This makes favorites proportionally
+    more likely when rng.choice() samples the pool.
+
+    The boost only affects *which* meal gets chosen on each pick; the
+    deduplication in _pick_meal (via used_this_month) still prevents a
+    favorite from dominating the whole month — it just raises the chance
+    it gets the next available slot.
+    """
+    result: List[Meal] = []
+    for meal in pool:
+        result.extend([meal] * (boost if meal.favorite else 1))
+    return result
+
+
 def _build_anchor_index(config: Config) -> Dict[int, AnchorRule]:
     """Map weekday → AnchorRule (only enabled ones)."""
     return {
@@ -157,6 +174,14 @@ def generate_schedule(
                 require_tags=ar.require_tags if ar.require_tags else None,
             )
             anchor_pools[ar.weekday] = ap
+
+    # Apply favorite boost: insert extra copies of favorite meals so they are
+    # proportionally more likely to be chosen by rng.choice().
+    # boost=3 means a favorite appears 3× as often as a non-favorite.
+    boost = max(1, config.favorite_boost)
+    pool_general    = _apply_boost(pool_general,    boost)
+    pool_make_ahead = _apply_boost(pool_make_ahead, boost)
+    anchor_pools    = {wd: _apply_boost(ap, boost) for wd, ap in anchor_pools.items()}
 
     # Shuffle pools for stochastic variety (deterministic via seed)
     rng.shuffle(pool_general)

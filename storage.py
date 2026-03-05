@@ -174,6 +174,7 @@ def load_config() -> Config:
         anchor_rules=anchor_rules,
         excluded_meals=data.get("excluded_meals", _default_excluded_meals()),
         max_soups_per_week=data.get("max_soups_per_week", 2),
+        favorite_boost=data.get("favorite_boost", 3),
     )
 
 
@@ -210,6 +211,7 @@ def save_config(config: Config) -> None:
         ],
         "excluded_meals": config.excluded_meals,
         "max_soups_per_week": config.max_soups_per_week,
+        "favorite_boost": config.favorite_boost,
     }
     _save_yaml(CONFIG_FILE, data)
 
@@ -574,6 +576,7 @@ def load_meals() -> List[Meal]:
             creamy=m.get("creamy", False),
             breakfast=m.get("breakfast", False),
             fried_rice=m.get("fried_rice", False),
+            favorite=m.get("favorite", False),
             make_ahead_ok=m.get("make_ahead_ok", False),
             leftover_friendly=m.get("leftover_friendly", False),
             notes=m.get("notes", ""),
@@ -594,6 +597,7 @@ def save_meals(meals: List[Meal]) -> None:
                 "creamy": m.creamy,
                 "breakfast": m.breakfast,
                 "fried_rice": m.fried_rice,
+                "favorite": m.favorite,
                 "make_ahead_ok": m.make_ahead_ok,
                 "leftover_friendly": m.leftover_friendly,
                 "notes": m.notes,
