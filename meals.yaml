@@ -1,0 +1,498 @@
+# meals.yaml — Candidate dinner meal library
+# Edit freely; the app will reload changes on the next Generate.
+#
+# Flags reference:
+#   contains_pork / contains_dairy / creamy / breakfast / fried_rice
+#   make_ahead_ok     – can be cooked Sunday, reheated Monday
+#   leftover_friendly – works well as next-day leftovers
+#
+# Equipment tags:
+#   air_fryer | instant_pot | slow_cooker | rice_cooker | toaster_oven
+
+meals:
+
+  # ── Air Fryer meals ────────────────────────────────────────────────────────
+
+  - name: Air Fryer Chicken Thighs + Sweet Potato Fries
+    tags: [chicken, american]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: true
+    notes: "Season with smoked paprika and garlic powder. 400 °F, 22 min."
+
+  - name: Air Fryer Salmon + Asparagus
+    tags: [seafood, healthy]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Lemon-dill marinade. 400 °F, 10 min."
+
+  - name: Air Fryer Fish Tacos + Cabbage Slaw
+    tags: [seafood, mexican]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Use cod or tilapia. Corn tortillas, lime crema (dairy-free)."
+
+  - name: Air Fryer Turkey Burgers + Sweet Potato Fries
+    tags: [turkey, american]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Form patties with onion powder and Worcestershire. 375 °F, 15 min."
+
+  - name: Air Fryer Chicken Wings + Veggie Sticks
+    tags: [chicken, american]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: true
+    notes: "Toss with buffalo sauce or teriyaki. 400 °F, 25 min."
+
+  - name: Air Fryer Cod + Roasted Veggies
+    tags: [seafood, healthy]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Season with Old Bay; pair with zucchini and bell pepper."
+
+  - name: Air Fryer Teriyaki Chicken + Broccoli + Rice
+    tags: [chicken, asian, japanese]
+    equipment: [air_fryer, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: true
+    notes: "Marinate chicken 30 min in soy-ginger teriyaki sauce."
+
+  - name: Air Fryer Salmon Patties + Green Beans
+    tags: [seafood, american]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Canned salmon, panko, egg, Dijon. 390 °F, 10 min per side."
+
+  - name: Air Fryer Beef Tacos
+    tags: [beef, mexican]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: true
+    notes: "Taco-seasoned ground beef. Serve with hard shells, salsa, and guac."
+
+  - name: Air Fryer Garlic Shrimp Skewers + Rice
+    tags: [seafood, mediterranean]
+    equipment: [air_fryer, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Marinate in garlic, lemon, olive oil. 400 °F, 8 min."
+
+  - name: Air Fryer Chicken Caesar Lettuce Wraps
+    tags: [chicken, american, salad]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: false
+    notes: "Dairy-free caesar dressing. Air fry chicken strips 380 °F, 15 min."
+
+  - name: Air Fryer Sweet Potato + Black Bean Bowls
+    tags: [vegetarian, healthy, american]
+    equipment: [air_fryer]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: true
+    notes: "Cubed sweet potato, seasoned black beans, avocado, salsa."
+
+  - name: Air Fryer Shrimp + Broccoli + Rice
+    tags: [seafood, asian]
+    equipment: [air_fryer, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: false
+    leftover_friendly: true
+    notes: "Season shrimp with soy, garlic, ginger. Broccoli alongside in basket."
+
+  # ── Instant Pot meals ──────────────────────────────────────────────────────
+
+  - name: Instant Pot Chicken Tikka Masala (Dairy-Free)
+    tags: [chicken, indian, curry]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Full-fat coconut milk replaces cream. Serve with basmati rice."
+
+  - name: Instant Pot Turkey Vegetable Soup
+    tags: [turkey, soup, healthy]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Ground or shredded turkey, carrots, celery, potatoes, diced tomatoes."
+
+  - name: Instant Pot Beef Stew
+    tags: [beef, american]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chuck roast, root veggies, beef broth. High pressure 35 min."
+
+  - name: Instant Pot Lentil Soup
+    tags: [vegetarian, soup, healthy]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Red or green lentils, cumin, turmeric, canned tomatoes. HP 15 min."
+
+  - name: Instant Pot Pasta e Fagioli
+    tags: [vegetarian, italian, soup]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "White beans, ditalini, tomatoes, Italian seasoning. Omit parmesan."
+
+  - name: Instant Pot Chicken Shawarma Bowls
+    tags: [chicken, middle_eastern]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Shawarma-spiced chicken thighs on rice with cucumber-tomato salad."
+
+  - name: Instant Pot Red Lentil Dal + Rice
+    tags: [vegetarian, indian]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Red lentils, coconut milk, spinach, garam masala."
+
+  - name: Instant Pot White Bean Chicken Chili
+    tags: [chicken, american, soup]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken breast, white beans, green chiles, cumin, chicken broth."
+
+  - name: Instant Pot Chicken Fajita Bowls
+    tags: [chicken, mexican, tex_mex]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken, peppers, onions, fajita seasoning over cilantro-lime rice."
+
+  - name: Instant Pot Vegetable Curry + Rice
+    tags: [vegetarian, indian, curry]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chickpeas, sweet potato, spinach, coconut milk curry."
+
+  - name: Instant Pot Chicken Burrito Bowls
+    tags: [chicken, mexican]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken, black beans, corn, salsa. Rice in rice cooker."
+
+  - name: Instant Pot Chicken & Rice Soup
+    tags: [chicken, american, soup]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken thighs, long-grain rice, carrots, celery. HP 20 min."
+
+  - name: Instant Pot Turkey Meatball Soup
+    tags: [turkey, italian, soup]
+    equipment: [instant_pot]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Turkey meatballs, diced tomatoes, orzo, spinach."
+
+  - name: Instant Pot Beef Taco Bowl
+    tags: [beef, mexican]
+    equipment: [instant_pot, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Ground beef, taco seasoning, black beans. Serve over rice with pico."
+
+  # ── Slow Cooker meals ──────────────────────────────────────────────────────
+
+  - name: Slow Cooker Beef Chili
+    tags: [beef, american, soup]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Ground beef, kidney beans, black beans, diced tomatoes. Low 6–8 h."
+
+  - name: Slow Cooker Chicken Cacciatore
+    tags: [chicken, italian]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken thighs, bell peppers, olives, tomato sauce. Low 6–8 h."
+
+  - name: Slow Cooker Chicken Tacos
+    tags: [chicken, mexican]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken breasts, taco seasoning, salsa. Shred; corn tortillas."
+
+  - name: Slow Cooker Pulled Chicken Sandwiches
+    tags: [chicken, american]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "BBQ sauce, apple cider vinegar, garlic. Low 6 h, shred."
+
+  - name: Slow Cooker Minestrone Soup
+    tags: [vegetarian, italian, soup]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Zucchini, kidney beans, pasta, diced tomatoes, Italian seasoning. Low 6–8 h."
+
+  - name: Slow Cooker Moroccan Chicken
+    tags: [chicken, moroccan, north_african]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken thighs, chickpeas, olives, preserved lemon, cumin, cinnamon. Low 6 h."
+
+  - name: Slow Cooker Chicken Pozole
+    tags: [chicken, mexican, soup]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken, hominy, red chile sauce, oregano. Low 7 h. Top with cabbage."
+
+  - name: Slow Cooker Black Bean Soup
+    tags: [vegetarian, latin, soup]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Dried black beans, cumin, smoked paprika, vegetable broth. Low 8 h."
+
+  - name: Slow Cooker Beef & Broccoli + Rice
+    tags: [beef, asian, chinese]
+    equipment: [slow_cooker, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Flank steak, soy sauce, sesame oil, ginger. Low 4–5 h; broccoli last 30 min."
+
+  - name: Slow Cooker Chicken Adobo + Rice
+    tags: [chicken, filipino, asian]
+    equipment: [slow_cooker, rice_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Soy sauce, coconut vinegar, garlic, bay leaves. Low 6 h."
+
+  - name: Slow Cooker Turkey Bolognese + Pasta
+    tags: [turkey, italian]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Ground turkey, crushed tomatoes, carrot, celery, Italian seasoning. Low 6–8 h."
+
+  - name: Slow Cooker Chicken Tortilla Soup
+    tags: [chicken, mexican, soup]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Chicken, black beans, corn, salsa, broth. Low 6–8 h. Top with tortilla strips."
+
+  - name: Slow Cooker Beef Short Ribs
+    tags: [beef, american]
+    equipment: [slow_cooker]
+    contains_pork: false
+    contains_dairy: false
+    creamy: false
+    breakfast: false
+    fried_rice: false
+    make_ahead_ok: true
+    leftover_friendly: true
+    notes: "Bone-in short ribs, beef broth, Worcestershire, thyme. Low 8 h."

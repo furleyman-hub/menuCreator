@@ -1,0 +1,57 @@
+# config.yaml — Dinner Scheduler configuration
+# Edit this file directly or use the Rules / Settings tab in the app.
+
+dinner_time: '18:00'
+timezone: America/New_York
+event_duration_minutes: 60
+random_seed: 42
+people_served: 1 adult + 2 boys (ages 10 and 13) — plan as 3 adults
+
+restrictions:
+  no_pork: true
+  no_dairy: true
+  no_creamy: true
+  no_breakfast: true
+  no_fried_rice: true
+  oven_avoid: true   # require small-appliance equipment (air_fryer, instant_pot, slow_cooker, etc.)
+
+leftover_strategy:
+  enabled: false
+  weekday: 2   # 0 = Monday … 6 = Sunday  (2 = Wednesday)
+
+anchor_rules:
+
+  - weekday: 6         # Sunday
+    label: 'Chicken Noodle Soup (big batch) — freeze half'
+    description: Big batch; freeze half for later in the month
+    enabled: true
+    fixed_name: true
+    require_make_ahead: false
+
+  - weekday: 0         # Monday
+    label: Make-ahead meal (auto-selected)
+    description: Cooked Sunday evening, reheated Monday
+    enabled: true
+    fixed_name: false        # auto-select from make_ahead pool
+    require_make_ahead: true
+
+  - weekday: 3         # Thursday
+    label: Fast Food / Pizza Night
+    description: No cooking tonight — takeout or delivery
+    enabled: true
+    fixed_name: true
+    require_make_ahead: false
+
+# Master list of meals the family has already had — excluded from generation.
+# Add or remove names here to manage the "already used" pool.
+excluded_meals:
+  - Chicken Noodle Soup
+  - Teriyaki Salmon + Rice + Green Beans
+  - Turkey Tacos
+  - Baked Ziti
+  - Air Fryer Chicken Thighs + Potatoes + Peas
+  - Chicken Stir-Fry + Rice + Carrots
+  - Instant Pot Chicken Curry + Rice
+  - Beef & Veggie Stew
+  - Turkey Meatballs + Pasta + Peas
+  - Chicken & Rice Casserole
