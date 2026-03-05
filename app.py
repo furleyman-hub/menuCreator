@@ -291,7 +291,7 @@ with tab_plan:
                 "Notes":     st.column_config.TextColumn("Notes", width="large"),
                 "⚠️":        st.column_config.TextColumn("⚠️", disabled=True, width="small"),
             },
-            column_order=["Date", "Meal", "Type", "Lock 🔒", "Notes", "⚠️"],
+            column_order=["Date", "Lock 🔒", "Meal", "Type", "Notes", "⚠️"],
             use_container_width=True,
             hide_index=True,
             num_rows="fixed",
