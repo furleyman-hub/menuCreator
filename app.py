@@ -498,19 +498,13 @@ with tab_meals:
             "Name":             m.name,
             "Tags":             ", ".join(m.tags),
             "Equipment":        ", ".join(m.equipment),
-            "Pork":             m.contains_pork,
-            "Dairy":            m.contains_dairy,
-            "Creamy":           m.creamy,
-            "Breakfast":        m.breakfast,
-            "Fried Rice":       m.fried_rice,
             "Favorite ⭐":      m.favorite,
             "Make-Ahead OK":    m.make_ahead_ok,
             "Leftover Friendly":m.leftover_friendly,
             "Notes":            m.notes,
         })
     meals_df = pd.DataFrame(meal_rows) if meal_rows else pd.DataFrame(
-        columns=["Name", "Tags", "Equipment", "Pork", "Dairy", "Creamy",
-                 "Breakfast", "Fried Rice", "Favorite ⭐", "Make-Ahead OK",
+        columns=["Name", "Tags", "Equipment", "Favorite ⭐", "Make-Ahead OK",
                  "Leftover Friendly", "Notes"]
     )
 
@@ -526,11 +520,6 @@ with tab_meals:
                 help="Comma-separated: air_fryer, instant_pot, slow_cooker, rice_cooker, toaster_oven",
                 width="medium",
             ),
-            "Pork":              st.column_config.CheckboxColumn("Pork?"),
-            "Dairy":             st.column_config.CheckboxColumn("Dairy?"),
-            "Creamy":            st.column_config.CheckboxColumn("Creamy?"),
-            "Breakfast":         st.column_config.CheckboxColumn("Breakfast?"),
-            "Fried Rice":        st.column_config.CheckboxColumn("Fried Rice?"),
             "Favorite ⭐":       st.column_config.CheckboxColumn(
                 "Favorite ⭐",
                 help="Checked meals appear more often in generation (see Favorite Boost in Settings).",
@@ -556,11 +545,6 @@ with tab_meals:
                     name=str(row["Name"]).strip(),
                     tags=[t.strip() for t in str(row["Tags"]).split(",") if t.strip()],
                     equipment=[e.strip() for e in str(row["Equipment"]).split(",") if e.strip()],
-                    contains_pork=bool(row["Pork"]),
-                    contains_dairy=bool(row["Dairy"]),
-                    creamy=bool(row["Creamy"]),
-                    breakfast=bool(row["Breakfast"]),
-                    fried_rice=bool(row["Fried Rice"]),
                     favorite=bool(row["Favorite ⭐"]),
                     make_ahead_ok=bool(row["Make-Ahead OK"]),
                     leftover_friendly=bool(row["Leftover Friendly"]),
