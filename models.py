@@ -80,8 +80,7 @@ class AnchorRule:
 @dataclass
 class Config:
     """Top-level application configuration (persisted to config.yaml)."""
-    dinner_time: str = "18:00"                 # HH:MM, 24-hour
-    timezone: str = "America/New_York"
+    dinner_time: str = "18:00"                 # kept for backward-compat; not used by all-day ICS
     event_duration_minutes: int = 60
     random_seed: int = 42                       # deterministic generation
     people_served: str = "1 adult + 2 boys (ages 10 and 13) — plan as 3 adults"

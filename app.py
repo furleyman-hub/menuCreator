@@ -158,20 +158,8 @@ with st.sidebar:
 
     st.divider()
 
-    # Timezone & seed (dinner time removed — events are all-day)
+    # Events are all-day — no dinner time or timezone needed
     cfg: Config = st.session_state.config
-    tz_options = [
-        "America/New_York",
-        "America/Chicago",
-        "America/Denver",
-        "America/Los_Angeles",
-        "America/Phoenix",
-        "America/Anchorage",
-        "Pacific/Honolulu",
-    ]
-    tz_idx = tz_options.index(cfg.timezone) if cfg.timezone in tz_options else 0
-    timezone = st.selectbox("Timezone", options=tz_options, index=tz_idx)
-
     seed = st.number_input(
         "Random Seed", value=int(cfg.random_seed), min_value=0, max_value=999999,
         help="Change the seed to get a different meal arrangement."
@@ -189,7 +177,6 @@ with st.sidebar:
 
     if generate_clicked:
         # Persist sidebar settings to config
-        cfg.timezone    = timezone
         cfg.random_seed = int(seed)
         storage.save_config(cfg)
 

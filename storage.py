@@ -163,7 +163,6 @@ def load_config() -> Config:
 
     return Config(
         dinner_time=data.get("dinner_time", "18:00"),
-        timezone=data.get("timezone", "America/New_York"),
         event_duration_minutes=data.get("event_duration_minutes", 60),
         random_seed=data.get("random_seed", 42),
         people_served=data.get(
@@ -182,7 +181,6 @@ def save_config(config: Config) -> None:
     """Persist *config* to config.yaml."""
     data: Dict[str, Any] = {
         "dinner_time": config.dinner_time,
-        "timezone": config.timezone,
         "event_duration_minutes": config.event_duration_minutes,
         "random_seed": config.random_seed,
         "people_served": config.people_served,
@@ -614,7 +612,7 @@ if __name__ == "__main__":
     print("=== storage.py self-test ===")
 
     cfg = load_config()
-    print(f"Config loaded: timezone={cfg.timezone}, seed={cfg.random_seed}")
+    print(f"Config loaded: seed={cfg.random_seed}")
     print(f"  Anchor rules: {len(cfg.anchor_rules)}")
     print(f"  Excluded meals: {len(cfg.excluded_meals)}")
 

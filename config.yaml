@@ -1,5 +1,4 @@
 dinner_time: '18:00'
-timezone: America/New_York
 event_duration_minutes: 60
 random_seed: 42
 people_served: 1 adult + 2 boys (ages 10 and 13) — plan as 3 adults
