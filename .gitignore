@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Streamlit
+.streamlit/
+
+# File-lock artifacts
+*.lock
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
