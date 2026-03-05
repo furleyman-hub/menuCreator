@@ -2,104 +2,98 @@
 ics_export.py — Generate a standards-compliant iCalendar (.ics) file
 from a list of ScheduleDay objects.
 
-The returned bytes can be offered as a download in the Streamlit UI.
+Events are all-day (DATE value, no time component).
 """
 
 from __future__ import annotations
 
+import calendar as cal_mod
 import hashlib
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 from typing import List
 
-import pytz
-from icalendar import Calendar, Event, vText
+from icalendar import Calendar, Event
 
-from models import Config, ScheduleDay
+from models import ScheduleDay
 
 
-def generate_ics(
-    schedule: List[ScheduleDay],
-    config: Config,
-    month: int,
-    year: int,
-) -> bytes:
-    """
-    Build a VCALENDAR with one VEVENT per schedule day.
-
-    Each event:
-      • DTSTART / DTEND in the user-selected timezone
-      • SUMMARY  = "Dinner: <meal name>"
-      • DESCRIPTION includes notes, tags, and any warnings
-      • UID is deterministic (date-based) so repeated exports don't create duplicates
-    """
-    try:
-        tz = pytz.timezone(config.timezone)
-    except pytz.exceptions.UnknownTimeZoneError:
-        tz = pytz.timezone("America/New_York")
-
-    # Parse HH:MM dinner time
-    try:
-        hour, minute = map(int, config.dinner_time.split(":"))
-    except (ValueError, AttributeError):
-        hour, minute = 18, 0
-
-    # --- Build calendar ---
+def _build_calendar(label: str) -> Calendar:
+    """Create a bare VCALENDAR with standard properties."""
     cal = Calendar()
     cal.add("prodid", "-//Dinner Scheduler//menuCreator 1.0//EN")
     cal.add("version", "2.0")
     cal.add("calscale", "GREGORIAN")
     cal.add("method", "PUBLISH")
-    cal.add("x-wr-calname", f"Family Dinners — {_month_label(month, year)}")
-    cal.add("x-wr-timezone", config.timezone)
+    cal.add("x-wr-calname", label)
+    return cal
 
+
+def _make_event(day: ScheduleDay, people_served: str) -> Event:
+    """Build a single all-day VEVENT for *day*."""
+    event = Event()
+
+    # All-day: pass date objects → icalendar emits DTSTART;VALUE=DATE:YYYYMMDD
+    event.add("dtstart", day.date)
+    event.add("dtend",   day.date + timedelta(days=1))  # exclusive end
+
+    event.add("summary", f"Dinner: {day.meal_name}")
+
+    # Description
+    desc_lines: List[str] = []
+    if day.notes:
+        desc_lines.append(f"Notes: {day.notes}")
+    if day.is_anchor and not day.is_fast_food:
+        desc_lines.append("Type: Weekly anchor meal")
+    if day.is_fast_food:
+        desc_lines.append("Type: Fast food / pizza night (no cooking)")
+    if day.is_leftovers:
+        desc_lines.append("Type: Leftovers night")
+    if day.locked:
+        desc_lines.append("(User-locked meal)")
+    if day.warning:
+        desc_lines.append(f"WARNING: {day.warning}")
+    desc_lines.append(f"Servings: {people_served}")
+    event.add("description", "\n".join(desc_lines))
+
+    # Deterministic UID — re-exporting won't create duplicates in Google Calendar
+    uid_hash = hashlib.md5(
+        f"{day.date.isoformat()}-dinner@menuCreator".encode()
+    ).hexdigest()[:8]
+    event.add("uid", f"{day.date.isoformat()}-{uid_hash}@menuCreator")
+
+    return event
+
+
+def generate_ics(
+    schedule: List[ScheduleDay],
+    people_served: str,
+    label: str,
+) -> bytes:
+    """
+    Build a VCALENDAR with one all-day VEVENT per schedule day.
+
+    Parameters
+    ----------
+    schedule      : days to include (can be the full month or a single week).
+    people_served : stored in each event's description.
+    label         : calendar display name, e.g. "Family Dinners — March 2025".
+    """
+    cal = _build_calendar(label)
     for day in schedule:
-        event = Event()
-
-        # DTSTART / DTEND
-        naive_start = datetime(
-            day.date.year, day.date.month, day.date.day, hour, minute
-        )
-        local_start = tz.localize(naive_start)
-        local_end   = local_start + timedelta(minutes=config.event_duration_minutes)
-
-        event.add("dtstart", local_start)
-        event.add("dtend",   local_end)
-
-        # SUMMARY
-        event.add("summary", f"Dinner: {day.meal_name}")
-
-        # DESCRIPTION
-        desc_lines: List[str] = []
-        if day.notes:
-            desc_lines.append(f"Notes: {day.notes}")
-        if day.is_anchor and not day.is_fast_food:
-            desc_lines.append("Type: Weekly anchor meal")
-        if day.is_fast_food:
-            desc_lines.append("Type: Fast food / pizza night (no cooking)")
-        if day.is_leftovers:
-            desc_lines.append("Type: Leftovers night")
-        if day.locked:
-            desc_lines.append("(User-locked meal)")
-        if day.warning:
-            desc_lines.append(f"WARNING: {day.warning}")
-        desc_lines.append(f"Servings: {config.people_served}")
-
-        if desc_lines:
-            event.add("description", "\n".join(desc_lines))
-
-        # UID — deterministic so re-exporting the same month doesn't create duplicates
-        uid_seed = f"{year}-{month:02d}-{day.date.day:02d}-dinner@menuCreator"
-        uid_hash = hashlib.md5(uid_seed.encode()).hexdigest()[:8]
-        event.add("uid", f"{day.date.isoformat()}-{uid_hash}@menuCreator")
-
-        cal.add_component(event)
-
+        cal.add_component(_make_event(day, people_served))
     return cal.to_ical()
 
 
-def _month_label(month: int, year: int) -> str:
-    import calendar as cal_mod
-    return f"{cal_mod.month_name[month]} {year}"
+def week_ranges(schedule: List[ScheduleDay]) -> List[tuple[int, List[ScheduleDay]]]:
+    """
+    Return [(iso_week_number, [ScheduleDay, ...]), ...] sorted by week.
+    Used by the UI to offer per-week download buttons.
+    """
+    from collections import defaultdict
+    buckets: dict[int, List[ScheduleDay]] = defaultdict(list)
+    for day in schedule:
+        buckets[day.date.isocalendar()[1]].append(day)
+    return sorted(buckets.items())
 
 
 # ---------------------------------------------------------------------------
@@ -115,19 +109,23 @@ if __name__ == "__main__":
     cfg   = storage.load_config()
     meals = storage.load_meals()
 
-    schedule, warnings = sched_mod.generate_schedule(2025, 3, meals, cfg)
-    ics_bytes = generate_ics(schedule, cfg, month=3, year=2025)
+    schedule, _ = sched_mod.generate_schedule(2025, 3, meals, cfg)
+    label = "Family Dinners — March 2025"
+    ics_bytes = generate_ics(schedule, cfg.people_served, label)
 
-    # Basic checks
-    assert b"BEGIN:VCALENDAR" in ics_bytes, "Missing VCALENDAR block"
-    assert b"BEGIN:VEVENT"    in ics_bytes, "Missing VEVENT block"
-    assert b"DTSTART"         in ics_bytes, "Missing DTSTART"
-    assert b"SUMMARY:Dinner:" in ics_bytes, "Missing SUMMARY"
+    assert b"BEGIN:VCALENDAR" in ics_bytes, "Missing VCALENDAR"
+    assert b"BEGIN:VEVENT"    in ics_bytes, "Missing VEVENT"
+    assert b"DTSTART;VALUE=DATE" in ics_bytes, "Events must be all-day (VALUE=DATE)"
+    assert b"DTEND;VALUE=DATE"   in ics_bytes, "Missing DTEND"
+    assert b"SUMMARY:Dinner:"    in ics_bytes, "Missing SUMMARY"
 
-    event_count = ics_bytes.count(b"BEGIN:VEVENT")
-    print(f"Events generated: {event_count}")
+    print(f"Events: {ics_bytes.count(b'BEGIN:VEVENT')}")
+    print(f"All-day format confirmed (VALUE=DATE present)")
 
-    if warnings:
-        print(f"Scheduler warnings: {len(warnings)}")
+    # Weekly split test
+    weeks = week_ranges(schedule)
+    print(f"Weeks: {len(weeks)}")
+    for wk, days in weeks:
+        print(f"  Week {wk}: {days[0].date:%b %d} – {days[-1].date:%b %d} ({len(days)} days)")
 
     print("PASSED")

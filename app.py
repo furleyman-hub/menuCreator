@@ -158,11 +158,8 @@ with st.sidebar:
 
     st.divider()
 
-    # Dinner time & timezone
+    # Timezone & seed (dinner time removed — events are all-day)
     cfg: Config = st.session_state.config
-    dinner_time = st.text_input(
-        "Dinner Time (HH:MM)", value=cfg.dinner_time, key="sb_dinner_time"
-    )
     tz_options = [
         "America/New_York",
         "America/Chicago",
@@ -192,7 +189,6 @@ with st.sidebar:
 
     if generate_clicked:
         # Persist sidebar settings to config
-        cfg.dinner_time = dinner_time
         cfg.timezone    = timezone
         cfg.random_seed = int(seed)
         storage.save_config(cfg)
@@ -650,52 +646,78 @@ with tab_export:
     else:
         schedule = st.session_state.schedule
 
-        st.subheader("ICS Calendar Export")
         st.markdown(
-            f"Download a standards-compliant `.ics` file for **{month_label}**. "
-            "Import it into Google Calendar, Apple Calendar, Outlook, or any app "
+            "Events are exported as **all-day** entries. "
+            "Import into Google Calendar, Apple Calendar, Outlook, or any app "
             "that supports the iCalendar format."
         )
+        st.caption(f"{len(schedule)} events · Calendar: Family Dinners — {month_label}")
 
-        # Event settings summary
-        col_a, col_b, col_c = st.columns(3)
-        col_a.metric("Events", len(schedule))
-        col_b.metric("Dinner time", cfg.dinner_time)
-        col_c.metric("Duration", f"{cfg.event_duration_minutes} min")
-
-        st.markdown(
-            f"**Timezone:** `{cfg.timezone}`  \n"
-            f"**Calendar name:** Family Dinners — {month_label}"
-        )
-
-        # Generate ICS
+        # ── Full-month export ────────────────────────────────────────────────
+        st.subheader(f"Full month — {month_label}")
         try:
-            ics_bytes = ics_export.generate_ics(
+            month_ics = ics_export.generate_ics(
                 schedule=schedule,
-                config=cfg,
-                month=sel_month,
-                year=sel_year,
+                people_served=cfg.people_served,
+                label=f"Family Dinners — {month_label}",
             )
-
-            filename = f"dinner_plan_{sel_year}_{sel_month:02d}.ics"
             st.download_button(
-                label="⬇️ Download .ics file",
-                data=ics_bytes,
-                file_name=filename,
+                label=f"⬇️ Download {month_label} .ics",
+                data=month_ics,
+                file_name=f"dinner_plan_{sel_year}_{sel_month:02d}.ics",
                 mime="text/calendar",
                 type="primary",
                 use_container_width=True,
+                key="dl_full_month",
             )
-
-            # Preview
-            with st.expander("Preview ICS content (first 40 lines)", expanded=False):
-                preview_lines = ics_bytes.decode("utf-8").splitlines()[:40]
-                st.code("\n".join(preview_lines), language="text")
-
+            with st.expander("Preview ICS (first 40 lines)", expanded=False):
+                st.code(
+                    "\n".join(month_ics.decode("utf-8").splitlines()[:40]),
+                    language="text",
+                )
         except Exception as exc:
             st.error(f"Failed to generate ICS: {exc}")
 
-        # Plain-text export
+        # ── Per-week exports ─────────────────────────────────────────────────
+        st.divider()
+        st.subheader("Individual weeks")
+        st.caption("Download a separate .ics file for any single week.")
+
+        try:
+            weeks = ics_export.week_ranges(schedule)
+            for wk_num, wk_days in weeks:
+                wk_start = wk_days[0].date
+                wk_end   = wk_days[-1].date
+                wk_label = (
+                    f"Week of {wk_start:%b %d} – {wk_end:%b %d, %Y}"
+                    if wk_start.month != wk_end.month
+                    else f"Week of {wk_start:%b %d} – {wk_end:%d, %Y}"
+                )
+                meal_preview = "  ·  ".join(
+                    f"{d.date:%a}: {d.meal_name}" for d in wk_days
+                )
+
+                with st.expander(wk_label, expanded=False):
+                    st.caption(meal_preview)
+                    wk_ics = ics_export.generate_ics(
+                        schedule=wk_days,
+                        people_served=cfg.people_served,
+                        label=f"Family Dinners — {wk_label}",
+                    )
+                    st.download_button(
+                        label=f"⬇️ Download {wk_label} .ics",
+                        data=wk_ics,
+                        file_name=(
+                            f"dinner_plan_{sel_year}_{sel_month:02d}"
+                            f"_week{wk_num}.ics"
+                        ),
+                        mime="text/calendar",
+                        key=f"dl_week_{wk_num}",
+                    )
+        except Exception as exc:
+            st.error(f"Failed to generate weekly ICS: {exc}")
+
+        # ── Plain-text export ────────────────────────────────────────────────
         st.divider()
         st.subheader("Plain-text Summary")
         lines = [f"Dinner Plan — {month_label}", "=" * 40]
@@ -710,6 +732,5 @@ with tab_export:
             file_name=f"dinner_plan_{sel_year}_{sel_month:02d}.txt",
             mime="text/plain",
         )
-
         with st.expander("Preview text", expanded=False):
             st.text(plain_text)
