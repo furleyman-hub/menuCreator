@@ -53,6 +53,9 @@ def _save_yaml(path: Path, data: Dict[str, Any]) -> None:
 # Default values
 # ---------------------------------------------------------------------------
 
+WEDNESDAY = 2
+
+
 def _default_anchor_rules() -> List[AnchorRule]:
     return [
         AnchorRule(
@@ -62,6 +65,7 @@ def _default_anchor_rules() -> List[AnchorRule]:
             enabled=True,
             fixed_name=True,
             require_make_ahead=False,
+            require_tags=["soup"],  # marks this anchor for the soup-cap counter
         ),
         AnchorRule(
             weekday=MONDAY,
@@ -70,6 +74,16 @@ def _default_anchor_rules() -> List[AnchorRule]:
             enabled=True,
             fixed_name=False,          # auto-select from eligible pool
             require_make_ahead=True,
+            require_tags=[],
+        ),
+        AnchorRule(
+            weekday=WEDNESDAY,
+            label="Soup Night (auto-selected)",
+            description="A different soup each week",
+            enabled=True,
+            fixed_name=False,
+            require_make_ahead=False,
+            require_tags=["soup"],  # auto-select any meal tagged 'soup'
         ),
         AnchorRule(
             weekday=THURSDAY,
@@ -78,6 +92,7 @@ def _default_anchor_rules() -> List[AnchorRule]:
             enabled=True,
             fixed_name=True,
             require_make_ahead=False,
+            require_tags=[],
         ),
     ]
 
@@ -141,6 +156,7 @@ def load_config() -> Config:
             enabled=ar.get("enabled", True),
             fixed_name=ar.get("fixed_name", True),
             require_make_ahead=ar.get("require_make_ahead", False),
+            require_tags=ar.get("require_tags", []),
         ))
     if not anchor_rules:
         anchor_rules = _default_anchor_rules()
@@ -158,6 +174,7 @@ def load_config() -> Config:
         leftover_strategy=leftover_strategy,
         anchor_rules=anchor_rules,
         excluded_meals=data.get("excluded_meals", _default_excluded_meals()),
+        max_soups_per_week=data.get("max_soups_per_week", 2),
     )
 
 
@@ -189,10 +206,12 @@ def save_config(config: Config) -> None:
                 "enabled": ar.enabled,
                 "fixed_name": ar.fixed_name,
                 "require_make_ahead": ar.require_make_ahead,
+                "require_tags": ar.require_tags,
             }
             for ar in config.anchor_rules
         ],
         "excluded_meals": config.excluded_meals,
+        "max_soups_per_week": config.max_soups_per_week,
     }
     _save_yaml(CONFIG_FILE, data)
 

@@ -57,14 +57,16 @@ class AnchorRule:
     Pins a weekday to either a fixed meal name *or* an auto-selected pool.
 
     Fields:
-        weekday         – 0 = Monday … 6 = Sunday
-        label           – Meal name (if fixed_name=True) or a display description
-        description     – Extra human-readable note shown in the plan
-        enabled         – If False the anchor is skipped; normal scheduling applies
-        fixed_name      – True  → use `label` verbatim as the meal name
-                          False → auto-select from eligible pool
-        require_make_ahead – Only relevant when fixed_name=False; restricts pool
-                             to meals with make_ahead_ok=True
+        weekday            – 0 = Monday … 6 = Sunday
+        label              – Meal name (if fixed_name=True) or a display description
+        description        – Extra human-readable note shown in the plan
+        enabled            – If False the anchor is skipped; normal scheduling applies
+        fixed_name         – True  → use `label` verbatim as the meal name
+                             False → auto-select from eligible pool
+        require_make_ahead – Restrict auto-select pool to make_ahead_ok meals
+        require_tags       – Restrict auto-select pool to meals carrying ALL of
+                             these tags (e.g. ["soup"] for Wednesday soup night).
+                             Also used by the soup-cap logic to identify soup anchors.
     """
     weekday: int
     label: str
@@ -72,6 +74,7 @@ class AnchorRule:
     enabled: bool = True
     fixed_name: bool = True
     require_make_ahead: bool = False
+    require_tags: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -82,6 +85,7 @@ class Config:
     event_duration_minutes: int = 60
     random_seed: int = 42                       # deterministic generation
     people_served: str = "1 adult + 2 boys (ages 10 and 13) — plan as 3 adults"
+    max_soups_per_week: int = 2                 # cap on soup meals per calendar week
 
     restrictions: Restrictions = field(default_factory=Restrictions)
     leftover_strategy: LeftoverStrategy = field(default_factory=LeftoverStrategy)

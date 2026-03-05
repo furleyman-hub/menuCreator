@@ -34,10 +34,16 @@ def filter_eligible_meals(
     excluded_names: List[str],
     config: Config,
     require_make_ahead: bool = False,
+    require_tags: Optional[List[str]] = None,
 ) -> List[Meal]:
     """
     Return meals that satisfy all enabled restrictions and are not in the
-    excluded list.  Optionally restrict to make_ahead_ok=True meals.
+    excluded list.
+
+    Optional filters:
+      require_make_ahead – only meals with make_ahead_ok=True
+      require_tags       – only meals whose tags contain ALL listed tags
+                           (e.g. ["soup"] for the Wednesday soup anchor)
     """
     excluded_set = set(excluded_names)
     eligible: List[Meal] = []
@@ -47,12 +53,12 @@ def filter_eligible_meals(
             continue
 
         r = config.restrictions
-        if r.no_pork      and meal.contains_pork:  continue
-        if r.no_dairy     and meal.contains_dairy:  continue
-        if r.no_creamy    and meal.creamy:          continue
-        if r.no_breakfast and meal.breakfast:       continue
-        if r.no_fried_rice and meal.fried_rice:     continue
-        # oven_avoid: if True, require at least one small-appliance tag
+        if r.no_pork       and meal.contains_pork:  continue
+        if r.no_dairy      and meal.contains_dairy:  continue
+        if r.no_creamy     and meal.creamy:          continue
+        if r.no_breakfast  and meal.breakfast:       continue
+        if r.no_fried_rice and meal.fried_rice:      continue
+        # oven_avoid: require at least one small-appliance tag
         if r.oven_avoid and meal.equipment:
             small = {"air_fryer", "instant_pot", "slow_cooker",
                      "rice_cooker", "toaster_oven"}
@@ -61,6 +67,10 @@ def filter_eligible_meals(
 
         if require_make_ahead and not meal.make_ahead_ok:
             continue
+
+        if require_tags:
+            if not all(tag in meal.tags for tag in require_tags):
+                continue
 
         eligible.append(meal)
 
@@ -131,14 +141,42 @@ def generate_schedule(
     dates = get_month_dates(year, month)
     anchor_index = _build_anchor_index(config)
 
-    # Pre-filter pools (excluding the master excluded list)
+    # ── Pre-filter base pools ────────────────────────────────────────────────
     pool_general    = filter_eligible_meals(meals, config.excluded_meals, config)
     pool_make_ahead = filter_eligible_meals(meals, config.excluded_meals, config,
                                             require_make_ahead=True)
 
-    # Shuffle both pools for stochastic variety while keeping determinism
+    # Build per-anchor pools for auto-select anchors with require_tags.
+    # Keyed by weekday integer so we can look them up cheaply inside the loop.
+    anchor_pools: Dict[int, List[Meal]] = {}
+    for ar in config.anchor_rules:
+        if ar.enabled and not ar.fixed_name:
+            ap = filter_eligible_meals(
+                meals, config.excluded_meals, config,
+                require_make_ahead=ar.require_make_ahead,
+                require_tags=ar.require_tags if ar.require_tags else None,
+            )
+            anchor_pools[ar.weekday] = ap
+
+    # Shuffle pools for stochastic variety (deterministic via seed)
     rng.shuffle(pool_general)
     rng.shuffle(pool_make_ahead)
+    for ap in anchor_pools.values():
+        rng.shuffle(ap)
+
+    # ── Pre-compute soup-anchor count per ISO week ───────────────────────────
+    # An anchor "counts as soup" when its require_tags includes "soup" (applies
+    # to both fixed and auto-select anchors, e.g. Sunday chicken soup and
+    # Wednesday soup night).  This lets us cap soup meals on regular days.
+    soup_anchors_per_week: Dict[int, int] = {}
+    for d in dates:
+        wk = d.isocalendar()[1]
+        anchor = anchor_index.get(d.weekday())
+        if anchor and _anchor_is_soup(anchor):
+            soup_anchors_per_week[wk] = soup_anchors_per_week.get(wk, 0) + 1
+
+    # Pool of non-soup meals for regular days in weeks that are at the soup cap
+    pool_no_soup = [m for m in pool_general if "soup" not in m.tags]
 
     schedule: List[ScheduleDay] = []
     warnings: List[str] = []
@@ -150,6 +188,7 @@ def generate_schedule(
 
     for d in dates:
         weekday = d.weekday()   # 0 = Monday … 6 = Sunday
+        wk      = d.isocalendar()[1]
 
         # ── Locked day: keep as-is ──────────────────────────────────────────
         if d in locked_days:
@@ -174,18 +213,34 @@ def generate_schedule(
                 schedule.append(day)
                 continue
             else:
-                # Auto-select from (optionally make-ahead) pool
-                pool = pool_make_ahead if anchor.require_make_ahead else pool_general
+                # Auto-select from the anchor's tagged pool (or general pool).
+                # If this anchor doesn't specifically require soups and the week
+                # is already at the soup cap, strip soup-tagged meals from pool.
+                pool = anchor_pools.get(weekday, pool_general)
+                soups_this_week = soup_anchors_per_week.get(wk, 0)
+                if (
+                    "soup" not in anchor.require_tags
+                    and soups_this_week >= config.max_soups_per_week
+                    and config.max_soups_per_week > 0
+                ):
+                    pool = [m for m in pool if "soup" not in m.tags]
                 chosen, is_repeat = _pick_meal(rng, pool, used_this_month)
 
                 if chosen is None:
-                    pool_name = "make-ahead" if anchor.require_make_ahead else "general"
+                    tag_desc = (
+                        f"tagged [{', '.join(anchor.require_tags)}] "
+                        if anchor.require_tags else ""
+                    )
+                    pool_desc = (
+                        f"make-ahead {tag_desc}" if anchor.require_make_ahead
+                        else tag_desc or "general"
+                    )
                     day = ScheduleDay(
                         date=d,
                         meal_name="[No eligible meals available]",
                         is_anchor=True,
                         warning=(
-                            f"No {pool_name} meals passed the current filters. "
+                            f"No {pool_desc}meals passed the current filters. "
                             "Add more meals or relax restrictions."
                         ),
                     )
@@ -222,27 +277,32 @@ def generate_schedule(
             schedule.append(day)
             continue
 
-        # ── Regular day: pick from general pool ────────────────────────────
-        chosen, is_repeat = _pick_meal(rng, pool_general, used_this_month)
+        # ── Regular day: pick from general pool (with soup cap) ─────────────
+        # If this week already has max_soups_per_week soup-anchor days,
+        # exclude soup-tagged meals from the regular pool.
+        soups_this_week = soup_anchors_per_week.get(wk, 0)
+        if soups_this_week >= config.max_soups_per_week:
+            regular_pool = pool_no_soup
+        else:
+            regular_pool = pool_general
+
+        chosen, is_repeat = _pick_meal(rng, regular_pool, used_this_month)
 
         if chosen is None:
             day = ScheduleDay(
                 date=d,
                 meal_name="[No eligible meals available]",
-                warning=(
-                    "Meal pool is empty. Add more meals or relax restrictions."
-                ),
+                warning="Meal pool is empty. Add more meals or relax restrictions.",
             )
             warnings.append(f"{d:%b %d}: {day.warning}")
             schedule.append(day)
             continue
 
         if is_repeat:
-            msg = (
+            warnings.append(
                 f"{d:%b %d}: meal pool exhausted — "
                 f"'{chosen.name}' is a repeat this month."
             )
-            warnings.append(msg)
 
         used_this_month.add(chosen.name)
         day = ScheduleDay(
@@ -253,6 +313,19 @@ def generate_schedule(
         schedule.append(day)
 
     return schedule, warnings
+
+
+def _anchor_is_soup(anchor: AnchorRule) -> bool:
+    """
+    Return True if this anchor contributes a soup to its week's soup count.
+    Matches anchors whose require_tags include 'soup', OR fixed anchors whose
+    label contains 'soup' (case-insensitive) — covers the Sunday chicken soup.
+    """
+    if "soup" in anchor.require_tags:
+        return True
+    if anchor.fixed_name and "soup" in anchor.label.lower():
+        return True
+    return False
 
 
 # ---------------------------------------------------------------------------

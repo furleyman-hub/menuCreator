@@ -367,6 +367,19 @@ with tab_rules:
                 value=cfg.restrictions.oven_avoid,
             )
 
+        st.subheader("Soup Cap")
+        max_soups = st.number_input(
+            "Max soups per week (0 = unlimited)",
+            value=int(cfg.max_soups_per_week),
+            min_value=0,
+            max_value=7,
+            help=(
+                "Weeks with soup anchor days (Sunday, Wednesday) already fill this "
+                "quota, so regular days won't be assigned additional soup meals. "
+                "Set to 0 to disable the cap."
+            ),
+        )
+
         st.subheader("Leftover Night Strategy")
         ls_enabled = st.checkbox(
             "Enable 'Leftovers Night' (one day per week is auto-assigned leftovers)",
@@ -394,6 +407,7 @@ with tab_rules:
                 "Enabled": ar.enabled,
                 "Fixed Name": ar.fixed_name,
                 "Require Make-Ahead": ar.require_make_ahead,
+                "Require Tags": ", ".join(ar.require_tags),
                 "_weekday_int": ar.weekday,
             })
 
@@ -401,27 +415,33 @@ with tab_rules:
         edited_anchors = st.data_editor(
             anchor_df,
             column_config={
-                "Weekday":             st.column_config.TextColumn(disabled=True),
-                "Label / Meal":        st.column_config.TextColumn(width="large"),
-                "Description":         st.column_config.TextColumn(width="large"),
-                "Enabled":             st.column_config.CheckboxColumn(),
-                "Fixed Name":          st.column_config.CheckboxColumn(
-                    help="If checked, the label is used as-is. "
-                         "If unchecked, a meal is auto-selected from the pool."
+                "Weekday":            st.column_config.TextColumn(disabled=True),
+                "Label / Meal":       st.column_config.TextColumn(width="large"),
+                "Description":        st.column_config.TextColumn(width="large"),
+                "Enabled":            st.column_config.CheckboxColumn(
+                    help="Uncheck to disable this anchor (day becomes regular)."
                 ),
-                "Require Make-Ahead":  st.column_config.CheckboxColumn(
-                    help="Only relevant when Fixed Name is off. "
-                         "Restricts auto-selection to make_ahead_ok meals."
+                "Fixed Name":         st.column_config.CheckboxColumn(
+                    help="Checked → label used as-is. "
+                         "Unchecked → auto-select from pool."
                 ),
-                "_weekday_int":        st.column_config.NumberColumn(disabled=True),
+                "Require Make-Ahead": st.column_config.CheckboxColumn(
+                    help="Auto-select only from make_ahead_ok meals."
+                ),
+                "Require Tags":       st.column_config.TextColumn(
+                    help="Comma-separated tags the auto-selected meal must have "
+                         "(e.g. 'soup'). Leave blank for no tag filter.",
+                    width="medium",
+                ),
+                "_weekday_int":       st.column_config.NumberColumn(disabled=True),
             },
             column_order=[
                 "Weekday", "Label / Meal", "Description",
-                "Enabled", "Fixed Name", "Require Make-Ahead",
+                "Enabled", "Fixed Name", "Require Make-Ahead", "Require Tags",
             ],
             use_container_width=True,
             hide_index=True,
-            num_rows="dynamic",   # allow adding new anchor rules
+            num_rows="dynamic",
             key="anchor_editor",
         )
 
@@ -441,11 +461,14 @@ with tab_rules:
             enabled=ls_enabled,
             weekday=int(ls_weekday),
         )
+        cfg.max_soups_per_week = int(max_soups)
 
         # Rebuild anchor rules from the edited table
         new_anchors: List[AnchorRule] = []
         for _, row in edited_anchors.iterrows():
             wday = int(row["_weekday_int"]) if "_weekday_int" in row else 0
+            raw_tags = str(row.get("Require Tags", ""))
+            req_tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
             new_anchors.append(AnchorRule(
                 weekday=wday,
                 label=str(row["Label / Meal"]),
@@ -453,6 +476,7 @@ with tab_rules:
                 enabled=bool(row["Enabled"]),
                 fixed_name=bool(row["Fixed Name"]),
                 require_make_ahead=bool(row["Require Make-Ahead"]),
+                require_tags=req_tags,
             ))
         cfg.anchor_rules = new_anchors
 
