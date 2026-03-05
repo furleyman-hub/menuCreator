@@ -224,16 +224,25 @@ def generate_schedule(
             schedule.append(day)
             continue
 
-        # ── Tuesday: reheat Monday's make-ahead meal ────────────────────────
+        # ── Tuesday: pick a different make-ahead meal (prepared Monday) ────────
         if weekday == TUESDAY and wk in monday_meal_by_week:
-            day = ScheduleDay(
-                date=d,
-                meal_name=monday_meal_by_week[wk],
-                is_reheat=True,
-                notes="Reheated from Monday",
-            )
-            schedule.append(day)
-            continue
+            chosen, is_repeat = _pick_meal(rng, pool_make_ahead, used_this_month)
+            if chosen is None:
+                chosen, is_repeat = _pick_meal(rng, pool_general, used_this_month)
+            if chosen is not None:
+                if is_repeat:
+                    warnings.append(
+                        f"{d:%b %d} (Tuesday): meal pool exhausted — "
+                        f"'{chosen.name}' is a repeat this month."
+                    )
+                used_this_month.add(chosen.name)
+                day = ScheduleDay(
+                    date=d,
+                    meal_name=chosen.name,
+                    notes="Prepared on Monday",
+                )
+                schedule.append(day)
+                continue
 
         # ── Anchor rule check ───────────────────────────────────────────────
         anchor = anchor_index.get(weekday)
