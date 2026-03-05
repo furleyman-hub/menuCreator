@@ -303,8 +303,8 @@ def generate_schedule(
                     warnings.append(msg)
 
                 used_this_month.add(chosen.name)
-                # If this is the Monday make-ahead anchor, record for Tuesday reheat
-                if weekday == MONDAY and anchor.require_make_ahead:
+                # Record Monday anchor so Tuesday knows to pick a make-ahead meal
+                if weekday == MONDAY:
                     monday_meal_by_week[wk] = chosen.name
                 day = ScheduleDay(
                     date=d,

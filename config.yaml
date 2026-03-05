@@ -15,11 +15,11 @@ anchor_rules:
   require_tags:
   - soup
 - weekday: 0
-  label: Make-ahead meal (auto-selected)
-  description: Cooked Monday, reheated and served Tuesday
+  label: Monday meal (auto-selected)
+  description: ''
   enabled: true
   fixed_name: false
-  require_make_ahead: true
+  require_make_ahead: false
   require_tags: []
 - weekday: 2
   label: Soup Night (auto-selected)
