@@ -13,8 +13,9 @@ Tabs:
 from __future__ import annotations
 
 import calendar
+from collections import defaultdict
 from datetime import date
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 import pandas as pd
 import streamlit as st
@@ -67,6 +68,24 @@ _init()
 # ─────────────────────────────────────────────────────────────────────────────
 # Helper: schedule → DataFrame (for st.data_editor)
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _month_weeks(year: int, month: int):
+    """
+    Return a list of (label, frozenset_of_dates) for each calendar week
+    that overlaps the given month, ordered chronologically.
+    """
+    _, num_days = calendar.monthrange(year, month)
+    month_dates = [date(year, month, d) for d in range(1, num_days + 1)]
+    buckets: dict = defaultdict(list)
+    for d in month_dates:
+        buckets[d.isocalendar()[1]].append(d)
+    result = []
+    for iso_wk in sorted(buckets):
+        days = buckets[iso_wk]
+        label = f"{days[0]:%b %d} – {days[-1]:%b %d}"
+        result.append((label, frozenset(days)))
+    return result
+
 
 def _type_label(day: ScheduleDay) -> str:
     if day.is_fast_food:  return "🍕 Fast Food"
@@ -158,6 +177,26 @@ with st.sidebar:
     st.session_state.sel_month = sel_month
     st.session_state.sel_year  = sel_year
 
+    # Week selection
+    _weeks = _month_weeks(sel_year, sel_month)
+    _week_labels = [lbl for lbl, _ in _weeks]
+    # Default: weeks whose last day is >= today (remaining/current weeks)
+    _default_labels = [lbl for lbl, days in _weeks if max(days) >= today]
+    if not _default_labels:
+        _default_labels = _week_labels  # all past → default to all
+    sel_week_labels = st.multiselect(
+        "Weeks to plan",
+        options=_week_labels,
+        default=_default_labels,
+        key=f"sel_weeks_{sel_year}_{sel_month}",
+        help="Uncheck weeks you don't need (e.g. already-passed weeks).",
+    )
+    # Resolve selected labels → set of dates
+    _label_to_dates = {lbl: days for lbl, days in _weeks}
+    sel_included_dates: Set[date] = set()
+    for lbl in sel_week_labels:
+        sel_included_dates.update(_label_to_dates[lbl])
+
     st.divider()
 
     # Events are all-day — no dinner time or timezone needed
@@ -198,13 +237,15 @@ with st.sidebar:
                 except Exception:
                     pass  # fall back to existing locked_days
 
-        # Run scheduler
+        # Run scheduler (only for selected weeks; None = full month)
+        included = sel_included_dates if sel_included_dates else None
         schedule, warnings = sched_mod.generate_schedule(
             year=st.session_state.sel_year,
             month=st.session_state.sel_month,
             meals=st.session_state.meals,
             config=cfg,
             locked_days=locked,
+            included_dates=included,
         )
         st.session_state.schedule     = schedule
         st.session_state.warnings     = warnings

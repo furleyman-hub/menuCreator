@@ -134,6 +134,7 @@ def generate_schedule(
     meals: List[Meal],
     config: Config,
     locked_days: Optional[Dict[date, ScheduleDay]] = None,
+    included_dates: Optional[set] = None,
 ) -> Tuple[List[ScheduleDay], List[str]]:
     """
     Generate a dinner plan for every day in the given month.
@@ -214,6 +215,9 @@ def generate_schedule(
         used_this_month.add(ld.meal_name)
 
     for d in dates:
+        if included_dates is not None and d not in included_dates:
+            continue
+
         weekday = d.weekday()   # 0 = Monday … 6 = Sunday
         wk      = d.isocalendar()[1]
 
