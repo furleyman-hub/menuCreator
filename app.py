@@ -20,6 +20,7 @@ from typing import Dict, List, Optional, Set
 import pandas as pd
 import streamlit as st
 
+import ai_generator
 import ics_export
 import scheduler as sched_mod
 import storage
@@ -208,9 +209,14 @@ with st.sidebar:
 
     st.divider()
 
-    # Generate button
+    # Generate buttons
     generate_clicked = st.button(
-        "▶ Generate / Regenerate", type="primary", use_container_width=True
+        "▶ Generate / Regenerate", type="primary", use_container_width=True,
+        help="Pick meals from your saved catalog.",
+    )
+    ai_generate_clicked = st.button(
+        "✨ AI Generate", type="secondary", use_container_width=True,
+        help="Ask Claude to suggest creative new meals. Requires ANTHROPIC_API_KEY.",
     )
     clear_clicked = st.button(
         "✖ Clear Schedule", use_container_width=True
@@ -252,6 +258,51 @@ with st.sidebar:
         st.session_state.locked_days  = {
             d.date: d for d in schedule if d.locked
         }
+
+    if ai_generate_clicked:
+        import os
+        if not os.environ.get("ANTHROPIC_API_KEY"):
+            st.error(
+                "ANTHROPIC_API_KEY is not set. "
+                "Add it to your environment and restart the app."
+            )
+        else:
+            cfg.random_seed = int(seed)
+            storage.save_config(cfg)
+
+            locked = st.session_state.locked_days.copy()
+            if st.session_state.schedule and "plan_editor" in st.session_state:
+                editor_val = st.session_state.get("plan_editor")
+                if editor_val is not None:
+                    try:
+                        live_df = schedule_to_df(st.session_state.schedule)
+                        for idx, edits in editor_val.get("edited_rows", {}).items():
+                            for col, val in edits.items():
+                                live_df.at[int(idx), col] = val
+                        locked = df_to_locked_days(live_df, st.session_state.schedule)
+                    except Exception:
+                        pass
+
+            included = sorted(sel_included_dates) if sel_included_dates else [
+                date(st.session_state.sel_year, st.session_state.sel_month, d)
+                for d in range(1, __import__('calendar').monthrange(
+                    st.session_state.sel_year, st.session_state.sel_month)[1] + 1)
+            ]
+
+            with st.spinner("✨ Claude is thinking up your meals…"):
+                try:
+                    schedule, warnings = ai_generator.generate_ai_schedule(
+                        dates=included,
+                        config=cfg,
+                        locked_days=locked,
+                    )
+                    st.session_state.schedule    = schedule
+                    st.session_state.warnings    = warnings
+                    st.session_state.locked_days = {
+                        d.date: d for d in schedule if d.locked
+                    }
+                except Exception as exc:
+                    st.error(f"AI generation failed: {exc}")
 
     if clear_clicked:
         st.session_state.schedule    = None
