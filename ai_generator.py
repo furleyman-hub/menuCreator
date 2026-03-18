@@ -98,12 +98,17 @@ STRICT RULES — never violate:
 • No breakfast-for-dinner dishes
 • No fried rice
 • No seafood except salmon (no shrimp, fish other than salmon, crab, lobster, clams, etc.)
+• No spicy food — mild and family-friendly only
 • Small appliances ONLY: air fryer, instant pot, slow cooker, rice cooker, toaster oven
   (no full-size oven baking)
 
 CREATIVITY GUIDELINES:
-• Vary cuisines broadly — Mexican, Korean, Thai, Mediterranean, Caribbean,
-  Middle Eastern, Indian, Japanese, American, etc.
+• Vary cuisines BROADLY across the full week — spread across different regions so no
+  single cuisine dominates. Aim for a balanced mix such as:
+  Classic American, Italian, Mexican, Greek/Mediterranean, French, Japanese,
+  Indian, Caribbean, Middle Eastern, Chinese, Thai, Moroccan, Korean, etc.
+• Do NOT default to Asian or North African cuisines more than 1-2 times per week —
+  include plenty of European and classic American dishes
 • Give each meal a specific, appetising name (e.g. "Instant Pot Chicken Tikka Masala"
   not just "chicken curry")
 • Suggest dishes the family may not have tried before — be adventurous but
