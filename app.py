@@ -347,7 +347,14 @@ tab_plan, tab_rules, tab_meals, tab_export = st.tabs([
 # TAB 1 — Plan
 # ══════════════════════════════════════════════════════════════════════════════
 
-with tab_plan:
+@st.fragment
+def _render_plan_tab() -> None:
+    """
+    Isolated fragment so that lock-checkbox clicks and swap actions only
+    re-run this section, not the sidebar or other tabs.
+    """
+    sel_year  = st.session_state.sel_year
+    sel_month = st.session_state.sel_month
     month_label = f"{calendar.month_name[sel_month]} {sel_year}"
     st.header(f"📅 Dinner Plan — {month_label}")
 
@@ -356,134 +363,137 @@ with tab_plan:
             "No plan generated yet. Select a month in the sidebar and click "
             "**▶ Generate / Regenerate**."
         )
-    else:
-        schedule = st.session_state.schedule
+        return
 
-        # Warnings banner
-        if st.session_state.warnings:
-            with st.expander(
-                f"⚠️ {len(st.session_state.warnings)} warning(s)", expanded=True
-            ):
-                for w in st.session_state.warnings:
-                    st.warning(w)
+    schedule = st.session_state.schedule
 
-        # Validation issues
-        issues = sched_mod.validate_schedule(schedule)
-        if issues:
-            with st.expander(f"🔍 {len(issues)} validation issue(s)"):
-                for issue in issues:
-                    st.error(issue)
+    # Warnings banner
+    if st.session_state.warnings:
+        with st.expander(
+            f"⚠️ {len(st.session_state.warnings)} warning(s)", expanded=True
+        ):
+            for w in st.session_state.warnings:
+                st.warning(w)
 
-        # Legend
-        st.markdown(
-            "**Legend:** ⚓ Anchor · 🍕 Fast Food · ♨️ Reheat · ♻️ Leftovers · 🥘 Regular · "
-            "🔒 Lock = keep this meal when regenerating"
-        )
+    # Validation issues
+    issues = sched_mod.validate_schedule(schedule)
+    if issues:
+        with st.expander(f"🔍 {len(issues)} validation issue(s)"):
+            for issue in issues:
+                st.error(issue)
 
-        # Build display DataFrame from current schedule
-        display_df = schedule_to_df(schedule)
+    # Legend
+    st.markdown(
+        "**Legend:** ⚓ Anchor · 🍕 Fast Food · ♨️ Reheat · ♻️ Leftovers · 🥘 Regular · "
+        "🔒 Lock = keep this meal when regenerating"
+    )
 
-        # Editable table
-        edited_df = st.data_editor(
-            display_df,
-            column_config={
-                "date_iso":  st.column_config.TextColumn("_date_iso", disabled=True),
-                "Date":      st.column_config.TextColumn("Date", disabled=True, width="medium"),
-                "Meal":      st.column_config.TextColumn("Meal Name", width="large"),
-                "Type":      st.column_config.TextColumn("Type", disabled=True, width="medium"),
-                "Lock 🔒":   st.column_config.CheckboxColumn("Lock 🔒", width="small"),
-                "Notes":     st.column_config.TextColumn("Notes", width="large"),
-                "⚠️":        st.column_config.TextColumn("⚠️", disabled=True, width="small"),
-            },
-            column_order=["Date", "Lock 🔒", "Meal", "Type", "Notes", "⚠️"],
-            use_container_width=True,
-            hide_index=True,
-            num_rows="fixed",
-            key="plan_editor",
-        )
+    # Build display DataFrame from current schedule
+    display_df = schedule_to_df(schedule)
 
-        # Sync edits back to the live schedule so ICS export reflects changes
-        if edited_df is not None:
-            sync_df_to_schedule(edited_df, schedule)
-            # Update locked_days registry
-            st.session_state.locked_days = df_to_locked_days(edited_df, schedule)
+    # Editable table
+    edited_df = st.data_editor(
+        display_df,
+        column_config={
+            "date_iso":  st.column_config.TextColumn("_date_iso", disabled=True),
+            "Date":      st.column_config.TextColumn("Date", disabled=True, width="medium"),
+            "Meal":      st.column_config.TextColumn("Meal Name", width="large"),
+            "Type":      st.column_config.TextColumn("Type", disabled=True, width="medium"),
+            "Lock 🔒":   st.column_config.CheckboxColumn("Lock 🔒", width="small"),
+            "Notes":     st.column_config.TextColumn("Notes", width="large"),
+            "⚠️":        st.column_config.TextColumn("⚠️", disabled=True, width="small"),
+        },
+        column_order=["Date", "Lock 🔒", "Meal", "Type", "Notes", "⚠️"],
+        use_container_width=True,
+        hide_index=True,
+        num_rows="fixed",
+        key="plan_editor",
+    )
 
-        # Swap two days
-        with st.expander("🔀 Swap Two Days", expanded=False):
-            swap_options = [
-                d for d in schedule
-                if not d.is_fast_food and not d.is_leftovers
-            ]
-            swap_labels = {
-                d.date: f"{d.date.strftime('%a %b %d')} — {d.meal_name}"
-                for d in swap_options
-            }
-            swap_dates = [d.date for d in swap_options]
-            if len(swap_dates) < 2:
-                st.info("Not enough swappable days in this plan.")
-            else:
-                col_a, col_b, col_btn = st.columns([2, 2, 1])
-                with col_a:
-                    date_a = st.selectbox(
-                        "Day A",
-                        options=swap_dates,
-                        format_func=lambda d: swap_labels[d],
-                        key="swap_a",
-                    )
-                with col_b:
-                    default_b = swap_dates[1] if swap_dates[0] == date_a else swap_dates[0]
-                    date_b = st.selectbox(
-                        "Day B",
-                        options=[d for d in swap_dates if d != date_a],
-                        format_func=lambda d: swap_labels[d],
-                        key="swap_b",
-                    )
-                with col_btn:
-                    st.write("")  # vertical alignment
-                    st.write("")
-                    do_swap = st.button("Swap", type="primary")
+    # Sync edits back to the live schedule so ICS export reflects changes
+    if edited_df is not None:
+        sync_df_to_schedule(edited_df, schedule)
+        # Update locked_days registry
+        st.session_state.locked_days = df_to_locked_days(edited_df, schedule)
 
-                if do_swap and date_a != date_b:
-                    day_a = next(d for d in schedule if d.date == date_a)
-                    day_b = next(d for d in schedule if d.date == date_b)
-                    # Swap meal content, keep dates and locked flag in place
-                    (
-                        day_a.meal_name, day_b.meal_name,
-                        day_a.notes,     day_b.notes,
-                        day_a.is_anchor, day_b.is_anchor,
-                        day_a.is_reheat, day_b.is_reheat,
-                        day_a.warning,   day_b.warning,
-                    ) = (
-                        day_b.meal_name, day_a.meal_name,
-                        day_b.notes,     day_a.notes,
-                        day_b.is_anchor, day_a.is_anchor,
-                        day_b.is_reheat, day_a.is_reheat,
-                        day_b.warning,   day_a.warning,
-                    )
-                    st.success(
-                        f"Swapped **{date_a.strftime('%a %b %d')}** "
-                        f"and **{date_b.strftime('%a %b %d')}**."
-                    )
-                    st.rerun()
+    # Swap two days
+    with st.expander("🔀 Swap Two Days", expanded=False):
+        swap_options = [
+            d for d in schedule
+            if not d.is_fast_food and not d.is_leftovers
+        ]
+        swap_labels = {
+            d.date: f"{d.date.strftime('%a %b %d')} — {d.meal_name}"
+            for d in swap_options
+        }
+        swap_dates = [d.date for d in swap_options]
+        if len(swap_dates) < 2:
+            st.info("Not enough swappable days in this plan.")
+        else:
+            col_a, col_b, col_btn = st.columns([2, 2, 1])
+            with col_a:
+                date_a = st.selectbox(
+                    "Day A",
+                    options=swap_dates,
+                    format_func=lambda d: swap_labels[d],
+                    key="swap_a",
+                )
+            with col_b:
+                date_b = st.selectbox(
+                    "Day B",
+                    options=[d for d in swap_dates if d != date_a],
+                    format_func=lambda d: swap_labels[d],
+                    key="swap_b",
+                )
+            with col_btn:
+                st.write("")  # vertical alignment
+                st.write("")
+                do_swap = st.button("Swap", type="primary")
 
-        # Week-summary view (collapsible)
-        with st.expander("Week-by-week summary", expanded=False):
-            current_week: List[str] = []
-            week_rows = []
-            week_header = []
-            for day in schedule:
-                wd = day.date.weekday()
-                if wd == 0 and current_week:
-                    week_rows.append(current_week)
-                    current_week = []
-                current_week.append(f"**{day.date.strftime('%a %d')}** — {day.meal_name}")
-            if current_week:
+            if do_swap and date_a != date_b:
+                day_a = next(d for d in schedule if d.date == date_a)
+                day_b = next(d for d in schedule if d.date == date_b)
+                # Swap meal content, keep dates and locked flag in place
+                (
+                    day_a.meal_name, day_b.meal_name,
+                    day_a.notes,     day_b.notes,
+                    day_a.is_anchor, day_b.is_anchor,
+                    day_a.is_reheat, day_b.is_reheat,
+                    day_a.warning,   day_b.warning,
+                ) = (
+                    day_b.meal_name, day_a.meal_name,
+                    day_b.notes,     day_a.notes,
+                    day_b.is_anchor, day_a.is_anchor,
+                    day_b.is_reheat, day_a.is_reheat,
+                    day_b.warning,   day_a.warning,
+                )
+                st.success(
+                    f"Swapped **{date_a.strftime('%a %b %d')}** "
+                    f"and **{date_b.strftime('%a %b %d')}**."
+                )
+                st.rerun(scope="fragment")
+
+    # Week-summary view (collapsible)
+    with st.expander("Week-by-week summary", expanded=False):
+        current_week: List[str] = []
+        week_rows = []
+        for day in schedule:
+            wd = day.date.weekday()
+            if wd == 0 and current_week:
                 week_rows.append(current_week)
+                current_week = []
+            current_week.append(f"**{day.date.strftime('%a %d')}** — {day.meal_name}")
+        if current_week:
+            week_rows.append(current_week)
 
-            for i, week in enumerate(week_rows, 1):
-                st.markdown(f"#### Week {i}")
-                for line in week:
-                    st.markdown(f"- {line}")
+        for i, week in enumerate(week_rows, 1):
+            st.markdown(f"#### Week {i}")
+            for line in week:
+                st.markdown(f"- {line}")
+
+
+with tab_plan:
+    _render_plan_tab()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
