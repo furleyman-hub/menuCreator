@@ -20,9 +20,11 @@ class Meal:
     # Dietary / restriction flags
     contains_pork: bool = False
     contains_dairy: bool = False
+    contains_seafood: bool = False  # non-salmon seafood (shrimp, cod, tilapia, etc.)
     creamy: bool = False        # creamy sauces; treated like dairy
     breakfast: bool = False     # breakfast-for-dinner items
     fried_rice: bool = False
+    spicy: bool = False         # hot/spicy dishes
 
     # Scheduling flags
     favorite: bool = False           # if True, meal is weighted more heavily in selection

@@ -53,11 +53,13 @@ def filter_eligible_meals(
             continue
 
         # Restrictions are always enforced (no toggles)
-        if meal.contains_pork:   continue
-        if meal.contains_dairy:  continue
-        if meal.creamy:          continue
-        if meal.breakfast:       continue
-        if meal.fried_rice:      continue
+        if meal.contains_pork:      continue
+        if meal.contains_dairy:     continue
+        if meal.contains_seafood:   continue
+        if meal.spicy:              continue
+        if meal.creamy:             continue
+        if meal.breakfast:          continue
+        if meal.fried_rice:         continue
         # oven_avoid: require at least one small-appliance tag
         if meal.equipment:
             small = {"air_fryer", "instant_pot", "slow_cooker",

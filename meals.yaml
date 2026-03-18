@@ -42,6 +42,7 @@ meals:
     equipment: [air_fryer]
     contains_pork: false
     contains_dairy: false
+    contains_seafood: true
     creamy: false
     breakfast: false
     fried_rice: false
@@ -78,6 +79,7 @@ meals:
     equipment: [air_fryer]
     contains_pork: false
     contains_dairy: false
+    contains_seafood: true
     creamy: false
     breakfast: false
     fried_rice: false
@@ -126,6 +128,7 @@ meals:
     equipment: [air_fryer, rice_cooker]
     contains_pork: false
     contains_dairy: false
+    contains_seafood: true
     creamy: false
     breakfast: false
     fried_rice: false
@@ -162,6 +165,7 @@ meals:
     equipment: [air_fryer, rice_cooker]
     contains_pork: false
     contains_dairy: false
+    contains_seafood: true
     creamy: false
     breakfast: false
     fried_rice: false

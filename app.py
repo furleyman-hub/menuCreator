@@ -408,6 +408,64 @@ with tab_plan:
             # Update locked_days registry
             st.session_state.locked_days = df_to_locked_days(edited_df, schedule)
 
+        # Swap two days
+        with st.expander("🔀 Swap Two Days", expanded=False):
+            swap_options = [
+                d for d in schedule
+                if not d.is_fast_food and not d.is_leftovers
+            ]
+            swap_labels = {
+                d.date: f"{d.date.strftime('%a %b %d')} — {d.meal_name}"
+                for d in swap_options
+            }
+            swap_dates = [d.date for d in swap_options]
+            if len(swap_dates) < 2:
+                st.info("Not enough swappable days in this plan.")
+            else:
+                col_a, col_b, col_btn = st.columns([2, 2, 1])
+                with col_a:
+                    date_a = st.selectbox(
+                        "Day A",
+                        options=swap_dates,
+                        format_func=lambda d: swap_labels[d],
+                        key="swap_a",
+                    )
+                with col_b:
+                    default_b = swap_dates[1] if swap_dates[0] == date_a else swap_dates[0]
+                    date_b = st.selectbox(
+                        "Day B",
+                        options=[d for d in swap_dates if d != date_a],
+                        format_func=lambda d: swap_labels[d],
+                        key="swap_b",
+                    )
+                with col_btn:
+                    st.write("")  # vertical alignment
+                    st.write("")
+                    do_swap = st.button("Swap", type="primary")
+
+                if do_swap and date_a != date_b:
+                    day_a = next(d for d in schedule if d.date == date_a)
+                    day_b = next(d for d in schedule if d.date == date_b)
+                    # Swap meal content, keep dates and locked flag in place
+                    (
+                        day_a.meal_name, day_b.meal_name,
+                        day_a.notes,     day_b.notes,
+                        day_a.is_anchor, day_b.is_anchor,
+                        day_a.is_reheat, day_b.is_reheat,
+                        day_a.warning,   day_b.warning,
+                    ) = (
+                        day_b.meal_name, day_a.meal_name,
+                        day_b.notes,     day_a.notes,
+                        day_b.is_anchor, day_a.is_anchor,
+                        day_b.is_reheat, day_a.is_reheat,
+                        day_b.warning,   day_a.warning,
+                    )
+                    st.success(
+                        f"Swapped **{date_a.strftime('%a %b %d')}** "
+                        f"and **{date_b.strftime('%a %b %d')}**."
+                    )
+                    st.rerun()
+
         # Week-summary view (collapsible)
         with st.expander("Week-by-week summary", expanded=False):
             current_week: List[str] = []
@@ -445,7 +503,9 @@ with tab_rules:
         st.info(
             "All dietary restrictions are always enforced: "
             "no pork · no dairy · no creamy sauces · no breakfast-for-dinner · "
-            "no fried rice · small appliances only (no full-size oven)."
+            "no fried rice · no seafood (shrimp, cod, tilapia, etc.) · "
+            "no spicy dishes · small appliances only (no full-size oven). "
+            "Salmon is permitted but limited."
         )
 
         st.subheader("Favorites")
