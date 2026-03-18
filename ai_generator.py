@@ -1,41 +1,23 @@
 """
-ai_generator.py — AI-powered meal schedule generation using Claude.
+ai_generator.py — AI-powered meal schedule generation using OpenAI.
 
-Uses Claude claude-opus-4-6 to suggest creative, varied dinner ideas within the
-family's dietary rules, rather than drawing only from the static meals.yaml catalog.
+Uses GPT-4o to suggest creative, varied dinner ideas within the family's
+dietary rules, rather than drawing only from the static meals.yaml catalog.
 """
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from typing import Dict, List, Tuple
 
-import anthropic
-from pydantic import BaseModel
+from openai import OpenAI
 
 from models import (
     Config, ScheduleDay, AnchorRule,
     FAST_FOOD_LABEL, WEEKDAY_NAMES,
 )
 
-
-# ---------------------------------------------------------------------------
-# Pydantic schema for structured AI output
-# ---------------------------------------------------------------------------
-
-class _AIMealDay(BaseModel):
-    date: str       # YYYY-MM-DD
-    meal_name: str  # Specific, descriptive name e.g. "Instant Pot Korean Beef Bulgogi + Rice"
-    notes: str      # One-sentence prep/serving tip
-
-
-class _AIMealPlan(BaseModel):
-    meals: List[_AIMealDay]
-
-
-# ---------------------------------------------------------------------------
-# Public entry point
-# ---------------------------------------------------------------------------
 
 def generate_ai_schedule(
     dates: List[date],
@@ -44,10 +26,10 @@ def generate_ai_schedule(
     api_key: str = "",
 ) -> Tuple[List[ScheduleDay], List[str]]:
     """
-    Generate a creative dinner plan for *dates* using Claude.
+    Generate a creative dinner plan for *dates* using OpenAI.
 
     Fixed anchors (Sunday soup, Thursday fast food) are applied directly.
-    All other days are handed to Claude to fill creatively within the
+    All other days are handed to GPT-4o to fill creatively within the
     family's dietary rules and equipment constraints.
 
     Returns (schedule, warnings) matching the same shape as
@@ -86,7 +68,7 @@ def generate_ai_schedule(
         schedule.sort(key=lambda s: s.date)
         return schedule, warnings
 
-    # ── Pass 2: ask Claude for the remaining days ────────────────────────────
+    # ── Pass 2: ask GPT-4o for the remaining days ────────────────────────────
     date_lines: List[str] = []
     for d in ai_dates:
         anchor = anchor_index.get(d.weekday())
@@ -101,7 +83,8 @@ def generate_ai_schedule(
     system_prompt = (
         "You are an enthusiastic family meal planner who loves suggesting creative, "
         "globally-inspired dinners that are easy to make with small kitchen appliances. "
-        "You always respect the family's dietary rules strictly."
+        "You always respect the family's dietary rules strictly. "
+        "You respond only with valid JSON."
     )
 
     user_prompt = f"""Plan creative family dinners for these dates.
@@ -131,23 +114,32 @@ CREATIVITY GUIDELINES:
 DATES:
 {chr(10).join(date_lines)}
 
-Return exactly one entry per date in the meals array.
-Each meal_name must include the cooking method and main protein/star ingredient.
-Each notes field: one short sentence about prep or serving."""
+Respond with a JSON object in exactly this format:
+{{
+  "meals": [
+    {{"date": "YYYY-MM-DD", "meal_name": "...", "notes": "one sentence prep/serving tip"}},
+    ...
+  ]
+}}
 
-    client = anthropic.Anthropic(api_key=api_key or None)
+Return exactly one entry per date. Each meal_name must include the cooking method
+and main protein/star ingredient."""
 
-    response = client.messages.parse(
-        model="claude-opus-4-6",
-        max_tokens=4096,
-        thinking={"type": "adaptive"},
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
-        output_format=_AIMealPlan,
+    client = OpenAI(api_key=api_key or None)
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        response_format={"type": "json_object"},
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0.9,
     )
 
-    ai_plan: _AIMealPlan = response.parsed_output
-    ai_lookup: Dict[str, _AIMealDay] = {m.date: m for m in ai_plan.meals}
+    raw = response.choices[0].message.content
+    data = json.loads(raw)
+    ai_lookup: Dict[str, dict] = {m["date"]: m for m in data.get("meals", [])}
 
     # ── Pass 3: build ScheduleDay objects from AI results ────────────────────
     for d in ai_dates:
@@ -156,9 +148,9 @@ Each notes field: one short sentence about prep or serving."""
             anchor = anchor_index.get(d.weekday())
             schedule.append(ScheduleDay(
                 date=d,
-                meal_name=ai_meal.meal_name,
+                meal_name=ai_meal["meal_name"],
                 is_anchor=(anchor is not None),
-                notes=ai_meal.notes,
+                notes=ai_meal.get("notes", ""),
             ))
         else:
             warnings.append(f"{d:%b %d}: AI did not return a meal for this date.")

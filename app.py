@@ -262,12 +262,12 @@ with st.sidebar:
     if ai_generate_clicked:
         import os
         _api_key = (
-            os.environ.get("ANTHROPIC_API_KEY")
-            or st.secrets.get("ANTHROPIC_API_KEY", "")
+            os.environ.get("OPENAI_API_KEY")
+            or st.secrets.get("OPENAI_API_KEY", "")
         )
         if not _api_key:
             st.error(
-                "ANTHROPIC_API_KEY is not set. "
+                "OPENAI_API_KEY is not set. "
                 "Add it to your Streamlit secrets or environment and restart the app."
             )
         else:
@@ -307,7 +307,14 @@ with st.sidebar:
                         d.date: d for d in schedule if d.locked
                     }
                 except Exception as exc:
-                    st.error(f"AI generation failed: {exc}")
+                    msg = str(exc)
+                    if "insufficient_quota" in msg or "quota" in msg.lower():
+                        st.error(
+                            "Your OpenAI account has insufficient credits. "
+                            "Add credits at **platform.openai.com → Billing**, then try again."
+                        )
+                    else:
+                        st.error(f"AI generation failed: {exc}")
 
     if clear_clicked:
         st.session_state.schedule    = None
