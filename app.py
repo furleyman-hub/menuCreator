@@ -216,7 +216,7 @@ with st.sidebar:
     )
     ai_generate_clicked = st.button(
         "✨ AI Generate", type="secondary", use_container_width=True,
-        help="Ask Claude to suggest creative new meals. Requires ANTHROPIC_API_KEY.",
+        help="Ask OpenAI to suggest creative new meals. Requires OPENAI_API_KEY.",
     )
     clear_clicked = st.button(
         "✖ Clear Schedule", use_container_width=True
@@ -293,7 +293,7 @@ with st.sidebar:
                     st.session_state.sel_year, st.session_state.sel_month)[1] + 1)
             ]
 
-            with st.spinner("✨ Claude is thinking up your meals…"):
+            with st.spinner("✨ OpenAI is thinking up your meals…"):
                 try:
                     schedule, warnings = ai_generator.generate_ai_schedule(
                         dates=included,
