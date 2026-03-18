@@ -97,6 +97,7 @@ STRICT RULES — never violate:
 • No creamy sauces
 • No breakfast-for-dinner dishes
 • No fried rice
+• No seafood except salmon (no shrimp, fish other than salmon, crab, lobster, clams, etc.)
 • Small appliances ONLY: air fryer, instant pot, slow cooker, rice cooker, toaster oven
   (no full-size oven baking)
 
