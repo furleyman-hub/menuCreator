@@ -41,6 +41,7 @@ def generate_ai_schedule(
     dates: List[date],
     config: Config,
     locked_days: Dict[date, ScheduleDay],
+    api_key: str = "",
 ) -> Tuple[List[ScheduleDay], List[str]]:
     """
     Generate a creative dinner plan for *dates* using Claude.
@@ -134,7 +135,7 @@ Return exactly one entry per date in the meals array.
 Each meal_name must include the cooking method and main protein/star ingredient.
 Each notes field: one short sentence about prep or serving."""
 
-    client = anthropic.Anthropic()
+    client = anthropic.Anthropic(api_key=api_key or None)
 
     response = client.messages.parse(
         model="claude-opus-4-6",

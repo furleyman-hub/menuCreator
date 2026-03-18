@@ -261,10 +261,14 @@ with st.sidebar:
 
     if ai_generate_clicked:
         import os
-        if not os.environ.get("ANTHROPIC_API_KEY"):
+        _api_key = (
+            os.environ.get("ANTHROPIC_API_KEY")
+            or st.secrets.get("ANTHROPIC_API_KEY", "")
+        )
+        if not _api_key:
             st.error(
                 "ANTHROPIC_API_KEY is not set. "
-                "Add it to your environment and restart the app."
+                "Add it to your Streamlit secrets or environment and restart the app."
             )
         else:
             cfg.random_seed = int(seed)
@@ -295,6 +299,7 @@ with st.sidebar:
                         dates=included,
                         config=cfg,
                         locked_days=locked,
+                        api_key=_api_key,
                     )
                     st.session_state.schedule    = schedule
                     st.session_state.warnings    = warnings
