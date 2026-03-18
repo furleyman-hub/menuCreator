@@ -98,6 +98,8 @@ STRICT RULES — never violate:
 • No breakfast-for-dinner dishes
 • No fried rice
 • No seafood except salmon (no shrimp, fish other than salmon, crab, lobster, clams, etc.)
+• Salmon is a rare treat — use it AT MOST ONCE across the entire set of dates provided,
+  and only if no salmon appeared in the previous week. Default to NOT using salmon.
 • No spicy food — mild and family-friendly only
 • Small appliances ONLY: air fryer, instant pot, slow cooker, rice cooker, toaster oven
   (no full-size oven baking)
@@ -140,7 +142,7 @@ and main protein/star ingredient."""
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        temperature=0.9,
+        temperature=0.7,
     )
 
     raw = response.choices[0].message.content
